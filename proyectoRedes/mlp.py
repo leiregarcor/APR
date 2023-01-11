@@ -76,6 +76,6 @@ for neuronas in [64,128,256,512,1024,2048]:
       #print(f"Epoch {t+1}\n-------------------------------")
       train_loop(train_dataloader, model, loss_fn, optimizer)
       err=test_loop(test_dataloader, model, loss_fn)
-      if(t==epochs):
+      if(t==30):
         print(f"{M1} {err*100:4.1f}")
 #print("Done!")
