@@ -44,31 +44,30 @@ class NeuralNetwork(nn.Module):
 torch.manual_seed(23)
 C = 10
 N,H,W = training_data.data.shape; D = H*W
-for neuronas in [64,128,256,512,1024,2048]:
-  M1= neuronas
-  model = NeuralNetwork(D, [(M1, nn.ReLU())], C)
+M1= 512
+model = NeuralNetwork(D, [(M1, nn.ReLU())], C)
 
-  def train_loop(dataloader, model, loss_fn, optimizer):
-      size = len(dataloader.dataset)
-      for batch, (X, y) in enumerate(dataloader):
-          pred = model(X); loss = loss_fn(pred, y)
-          optimizer.zero_grad(); loss.backward(); optimizer.step() # backprop
-          if batch % 100 == 0:
-              loss, current = loss.item(), batch * len(X)
-              #print(f"trloss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+def train_loop(dataloader, model, loss_fn, optimizer):
+    size = len(dataloader.dataset)
+    for batch, (X, y) in enumerate(dataloader):
+        pred = model(X); loss = loss_fn(pred, y)
+        optimizer.zero_grad(); loss.backward(); optimizer.step() # backprop
+        if batch % 100 == 0:
+            loss, current = loss.item(), batch * len(X)
+            #print(f"trloss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
-  def test_loop(dataloader, model, loss_fn):
-      size = len(dataloader.dataset); nbatches = len(dataloader)
-      teloss, correct = 0, 0
-      with torch.no_grad():
-          for X, y in dataloader:
-              pred = model(X); teloss += loss_fn(pred, y).item()
-              correct += (pred.argmax(1) == y).type(torch.float).sum().item()
-      teloss /= nbatches; correct /= size
-      #print(f"teacc: {(100*correct):>0.1f}%, teloss: {teloss:>8f} \n")
-      return 1-correct
-
-  learning_rate = 1e-3
+def test_loop(dataloader, model, loss_fn):
+    size = len(dataloader.dataset); nbatches = len(dataloader)
+    teloss, correct = 0, 0
+    with torch.no_grad():
+        for X, y in dataloader:
+            pred = model(X); teloss += loss_fn(pred, y).item()
+            correct += (pred.argmax(1) == y).type(torch.float).sum().item()
+    teloss /= nbatches; correct /= size
+    #print(f"teacc: {(100*correct):>0.1f}%, teloss: {teloss:>8f} \n")
+    return 1-correct
+for l in [1e-5, 1e-4, 1e-3, 1e-2, 1e-1]:
+  learning_rate = l
   loss_fn = nn.CrossEntropyLoss()
   optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
   epochs = 30
@@ -76,6 +75,6 @@ for neuronas in [64,128,256,512,1024,2048]:
       #print(f"Epoch {t+1}\n-------------------------------")
       train_loop(train_dataloader, model, loss_fn, optimizer)
       err=test_loop(test_dataloader, model, loss_fn)
-      if(t==30):
-        print(f"{M1} {err*100:4.1f}")
-#print("Done!")
+      if(t==epochs-1):
+        print(f"{learning_rate} {err*100:4.1f}")
+  #print("Done!")
